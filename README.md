@@ -1,4 +1,4 @@
-<p align="center"><img src="https://gnos.in/img/shot/common/gnos-sockets_0.png"></img></p>
+<div align="center"><p align="center"><img src="https://gnos.in/img/shot/common/gnos-sockets_0.png"></img></p></div>
 
 # GNOS Sockets
 
