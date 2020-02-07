@@ -26,7 +26,10 @@ Usage: sss [ options ] [ PATTERN ]
 ```
 
 ## Install
+### APT
+Use the repository https://packages.azlux.fr/ and install with `apt update` and `apt install sss`
 
+### Manually (no auto-update)
 Just copy somewhere in your `$PATH`.
 
 Depends: `ss` `sed` `awk` `sort` `column` `sudo`.
