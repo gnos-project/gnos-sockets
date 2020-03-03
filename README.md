@@ -21,9 +21,12 @@ Usage: sss [ options ] [ PATTERN ]
   -u       Display only UDP sockets
   -l       Display only listening sockets
   -L       Display only non-listening sockets
+  -s       Display short IP
   -N       Resolve numerics
   PATTERN  Plain-text match
 ```
+
+If you have the habit of `ss -tupln`, you can use the same with `sss -tupln`, unknown parameters will not disturb the output.
 
 ## Install
 ### APT
