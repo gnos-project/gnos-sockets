@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # NAME:  GNOS sockets
 # DESC:  Handy ss wrapper
 # FEAT:  Colors support
@@ -22,6 +22,7 @@ Usage: $( basename "$( readlink -f "$BASH_SOURCE" )" ) [ options ] [ PATTERN ]
   -u       Display only UDP sockets
   -l       Display only listening sockets
   -L       Display only non-listening sockets
+  -s       Display short IP
   -N       Resolve numerics
   PATTERN  Plain-text match
 EOF
@@ -34,9 +35,9 @@ Fix ()
            -e 's/^([A-Z-]+)([0-9])/\1 \2/'
 }
 
-Render () # $1:COLORS $2:PROTO_SUFFIX $3:PATTERN $4:LISTEN $5:NUMERIC
+Render () # $1:COLORS $2:PROTO_SUFFIX $3:PATTERN $4:LISTEN $5:NUMERIC $6:FORCE $7:SHORT
 {
-    awk -v colors=$1 -v suffix=$2 -v pattern="$3" -v listen=$4 -v numeric=$5 -v force=$6 \
+    awk -v colors=$1 -v suffix=$2 -v pattern="$3" -v listen=$4 -v numeric=$5 -v force=$6 -v short=$7 \
         -v username=${SUDO_USER:-$USER} -v hostname=$HOSTNAME '
 
     BEGIN {
@@ -164,10 +165,13 @@ Render () # $1:COLORS $2:PROTO_SUFFIX $3:PATTERN $4:LISTEN $5:NUMERIC
     function FormatIp(ip)
     {
         gsub("(:[^:]*|%.*)$" , "", ip)
-        if (substr(ip, 1, 1)=="[") ip=substr(ip, 2, length(ip)-2)
-        if (substr(ip, 1, 7)=="::ffff:") ip=substr(ip, 8)
-        if (ip=="*" || ip=="0.0.0.0" || ip=="::") ip=0
-        if (substr(ip, 1, 4)=="127." || ip=="::1" || ip=="localhost") ip=1
+        if (short==1)
+        {
+            if (substr(ip, 1, 1)=="[") ip=substr(ip, 2, length(ip)-2)
+            if (substr(ip, 1, 7)=="::ffff:") ip=substr(ip, 8)
+            if (ip=="*" || ip=="0.0.0.0" || ip=="::") ip=0
+            if (substr(ip, 1, 4)=="127." || ip=="::1" || ip=="localhost") ip=1
+        }
         return ip
     }
     function ColorIp(ip)
@@ -212,6 +216,7 @@ ipv=0
 tcp=0
 listen=0
 numeric=1
+short=0
 
 # Colors
 [[ -t 1 && "$(tput colors)" -ge 8 ]] && colors=$(tput colors)
@@ -221,7 +226,7 @@ cbold='\033[1m'
 
 
 # ARGS
-while getopts hNlL46tu opt "$@" &>/dev/null ; do
+while getopts hNlL46tupns opt "$@" &>/dev/null ; do
     case "$opt" in
 
         4)    [[ $ipv -eq 6 ]] && ipv=0 || ipv=4 ;;
@@ -234,6 +239,7 @@ while getopts hNlL46tu opt "$@" &>/dev/null ; do
         L)    [[ $listen -eq 1 ]] && listen=0 || listen=2 ;;
 
         N)    numeric=0 ;;
+        s)    short=1 ;;
 
         h)    Usage 0 ;;
         [?])  Usage 1 ;;
@@ -285,8 +291,8 @@ esac
 
     # Data
     {
-        [[ $ipv -eq 4 || $ipv -eq 0 ]] && ss $opts --ipv4 | Fix | Render "$colors" "" "$pattern" "$listen" "$numeric" "$force"
-        [[ $ipv -eq 6 || $ipv -eq 0 ]] && ss $opts --ipv6 | Fix | Render "$colors" 6  "$pattern" "$listen" "$numeric" "$force"
+        [[ $ipv -eq 4 || $ipv -eq 0 ]] && ss $opts --ipv4 | Fix | Render "$colors" "" "$pattern" "$listen" "$numeric" "$force" "$short"
+        [[ $ipv -eq 6 || $ipv -eq 0 ]] && ss $opts --ipv6 | Fix | Render "$colors" 6  "$pattern" "$listen" "$numeric" "$force" "$short"
     } | sort -n
 
 } | column -t
